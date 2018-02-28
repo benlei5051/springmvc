@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                          http://www.springframework.org/schema/beans/spring-beans.xsd
+                          http://www.springframework.org/schema/context
+                          http://www.springframework.org/schema/context/spring-context.xsd
+                          http://www.springframework.org/schema/mvc
+                          http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+    <context:component-scan base-package="org.java"/>
+    <!--此文件负责整个mvc中的配置-->
+
+    <!-- 配置注解驱动 可以将request参数与绑定到controller参数上 -->
+
+    <!--返回json格式，避免IE浏览器出现下载，原因是因为IE不支持content-TYPE为application/json 格式-->
+    <!--方式一-->
+    <!-- <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+         <property name="messageConverters">
+             <list>
+                 <ref bean="mappingJacksonHttpMessageConverter"/>
+             </list>
+         </property>
+     </bean>
+     <bean id="mappingJacksonHttpMessageConverter"
+           class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+         <property name="supportedMediaTypes">
+             <list>
+                 <value>text/html;charset=UTF-8</value>
+             </list>
+         </property>
+     </bean>
+     <mvc:annotation-driven>-->
+    <mvc:annotation-driven conversion-service="myDateConverter">
+        <mvc:message-converters
+                register-defaults="true"><!--如果会true，会默认加载httpMessageConvert消息转化器，但是下面已经配置的转换器优先级较高，如果为false，仅仅使用用户自定义的HttpMessageConverter-->
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <constructor-arg value="UTF-8"/>  <!--对返回字符串乱码的处理，如果没有这个配置，只有json的配置，返回字符串会有引号-->
+            </bean>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/html;charset=UTF-8</value>  <!--对返回json串，IE下载处理-->
+                        <value>application/json;charset=UTF-8</value>
+                    </list>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <bean id="myDateConverter" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <bean class="org.java.common.MyDateConverter"></bean>
+                <bean class="org.springframework.core.convert.support.StringToBooleanConverter"></bean>
+            </set>
+        </property>
+    </bean>
+
+    <!--方法二-->
+    <!-- <mvc:annotation-driven>
+         <mvc:message-converters>
+             <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                 <property name="supportedMediaTypes">
+                     <list>
+                         <value>text/html;charset=UTF-8</value>
+                     </list>
+                 </property>
+             </bean>
+         </mvc:message-converters>
+     </mvc:annotation-driven>-->
+
+    <!--方法三-->
+    <!-- <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+
+     <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+         <property name="messageConverters">
+             <list>
+                 <ref bean="mappingJacksonHttpMessageConverter"/>
+             </list>
+         </property>
+     </bean>
+     <bean id="mappingJacksonHttpMessageConverter"
+           class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+         <property name="supportedMediaTypes">
+             <list>
+                 <value>text/html;charset=UTF-8</value>
+             </list>
+         </property>
+     </bean>-->
+    <!--静态资源映射-->
+    <!--本项目把静态资源放在了webapp的statics目录下，资源映射如下-->
+      <mvc:resources mapping="/css/**" location="/statics/css/"/>
+      <mvc:resources mapping="/js/**" location="/statics/js/"/>
+      <mvc:resources mapping="/image/**" location="/statics/image/"/>
+
+     <!--对模型视图名称的解析，即在模型视图名称添加前后缀(如果最后一个还是表示文件夹,则最后的斜杠不要漏了) 使用JSP-->
+     <!--默认的视图解析器 在上边的解析错误时使用 (默认使用html)-->
+      <bean id="defaultViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+          <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+          <property name="prefix" value="/views/"/><!--设置JSP文件的目录位置-->
+          <property name="suffix" value=".jsp"/>
+      </bean>
+
+    <!-- 自动扫描装配 -->
+
+    <!--<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>-->
+</beans>
